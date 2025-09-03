@@ -52,6 +52,8 @@ Use of this code is entirely at your own risk.
 
 ## References
 
+'''
 [1] L. Piro, E. Tang, R. Golestanian, Physical Review Research 3 (2), 023125
 [2] S. Markvorsen, E. Pendás-Recondo, F. Rygaard, arXiv preprint arXiv:2508.07274, 2025
 [3] F. Rygaard, S. Hauberg, https://arxiv.org/abs/2505.05961, 2025
+'''
