@@ -21,11 +21,11 @@ The code can be run using main.py or gui_interface.py for a graphical user inter
 
 ## Data
 
-The code automatically downloads the jet stream data using The Climate Data Store (CDS) Application Program Interface (API). See for license, details and how to setup up the API.
+The code automatically downloads the jet stream data using The Climate Data Store (CDS) Application Program Interface (API). We refer to CDS for license, details and how to setup up the API.
 
 ## Code Structure
 
-The following shows the structure of the code. All general implementations of geometry and optimization algorithms can be found in the "geometry" folder for both the Riemannian and Finsler case.
+The following shows the structure of the code.
 
     .
     ├── main.py                                     # Computes the time-minimizing curve given initial parameters between two points on earth for a static jet stream.
