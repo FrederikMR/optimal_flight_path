@@ -26,8 +26,8 @@ The code automatically downloads the jet stream data using The Climate Data Stor
 The following shows the structure of the code. All general implementations of geometry and optimization algorithms can be found in the "geometry" folder for both the Riemannian and Finsler case.
 
     .
-    ├── main.py                        # Computes the time-minimizing curve given initial parameters between two points on earth for a static jet stream.
-    ├── gui_interface.py               # A graphical user interface for computing time-minizming curves between two points.
+    ├── main.py                                     # Computes the time-minimizing curve given initial parameters between two points on earth for a static jet stream.
+    ├── gui_interface.py                            # A graphical user interface for computing time-minizming curves between two points.
     ├── flight_model/manifold.py                    # Contains the WGS48 Earth Model
     ├── flight_model/conversion.py                  # Conversion from coordinates to floates
     ├── flight_model/metrics.py                     # The time-dependent Finsler metric for the Earth model
@@ -35,7 +35,7 @@ The following shows the structure of the code. All general implementations of ge
     ├── flight_model/geodesics.py                   # The algorithm from [2] used to compute the time-minimizing flight path.
     ├── flight_model/plotting.py                    # Contains generic plot functions
     ├── flight_model/download_jet_streams.py        # Downloads the jet stream data using The Climate Data Store (CDS) Application Program Interface (API). See for license and details.
-    ├── flight_ui_background_image.png # A background image taken from Microsoft Flight Simulater for the GUI
+    ├── flight_ui_background_image.png              # A background image taken from Microsoft Flight Simulater for the GUI
     └── README.md
 
 ## Future work
