@@ -17,19 +17,19 @@ from PyQt5.QtCore import Qt
 
 from PyQt5.QtWidgets import QDialog
 
-from download_jet_streams import (
+from flight_model.download_jet_streams import (
     DownloadJetStreams
     )
 
-from interpolation import (
+from flight_model.interpolation import (
     BilinearInterpolation
     )
 
-from manifold import (
+from flight_model.manifold import (
     WGS84Earth
     )
 
-from plotting import (
+from flight_model.plotting import (
     plot_earth_chart,
     plot_3d_earth,
     plot_earth_region_chart,
