@@ -1,5 +1,7 @@
 # Optimal Flight Path under Jet Streams
 
+<img width="569" height="292" alt="earth_chart" src="https://github.com/user-attachments/assets/d55e1770-7c54-4673-8436-811c2927b37c" />
+
 This repository is a "just for fun"-project that aims to compute the time-minimizing flight paths given jet streams.
 
 Computing the time-minizming the path between two points on a sphere corresponds to finding the geodesics on a sphere, which have a well-known closed-form expression. However, if a flight is moving under the influence of a jet stream, simply computing geodesics will not the time-minimizing paths. This repository computes the time minimizing flight path between two points given a jet stream by computing geodesics under a time-dependent Finsler metric. We consider the Riemannian background metric induced by the WGS48 Earth Model corresponding to an ellipsoid, and a time-dependent force field acting on the earth model corresponding to the jet stream. Under certain regularity this can be seen as a time-dependent Finsler metric following the work of [1].
@@ -10,8 +12,31 @@ Geodesics under a time-dependent Finsler metric can be found using the algorithm
 
 The code can be setup using the environment env.yaml.
 
+```
 conda env create -f env.yaml
 conda activate flight_model
+```
+
+## Data
+
+The code automatically downloads the jet stream data using The Climate Data Store (CDS) Application Program Interface (API). See for license, details and how to setup up the API.
+
+## Code Structure
+
+The following shows the structure of the code. All general implementations of geometry and optimization algorithms can be found in the "geometry" folder for both the Riemannian and Finsler case.
+
+    .
+    ├── main.py                        # Computes the time-minimizing curve given initial parameters between two points on earth for a static jet stream.
+    ├── gui_interface.py               # A graphical user interface for computing time-minizming curves between two points.
+    ├── manifold.py                    # Contains the WGS48 Earth Model
+    ├── conversion.py                  # Conversion from coordinates to floates
+    ├── metrics.py                     # The time-dependent Finsler metric for the Earth model
+    ├── interpolation.py               # Bilinear interpolation for the jet stream data in JAX
+    ├── geodesics.py                   # The algorithm from [2] used to compute the time-minimizing flight path.
+    ├── plotting.py                    # Contains generic plot functions
+    ├── download_jet_streams.py        # Downloads the jet stream data using The Climate Data Store (CDS) Application Program Interface (API). See for license and details.
+    ├── flight_ui_background_image.png # A background image taken from Microsoft Flight Simulater for the GUI
+    └── README.md
 
 ## Future work
 
