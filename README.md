@@ -8,7 +8,7 @@ Computing the time-minimizing the path between two points on a sphere correspond
 
 Geodesics under a time-dependent Finsler metric can be found using the algorithm prooposed in [2]. In the special case that the force field is zero, or is not time-dependent this corresponds to the algorithm in [3].
 
-## Installation
+## Installation and setup
 
 The code can be setup using the environment env.yaml.
 
@@ -16,6 +16,8 @@ The code can be setup using the environment env.yaml.
 conda env create -f env.yaml
 conda activate flight_model
 ```
+
+The code can be run using main.py or gui_interface.py for a graphical user interface.
 
 ## Data
 
