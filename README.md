@@ -17,7 +17,17 @@ conda env create -f env.yaml
 conda activate flight_model
 ```
 
-The code can be run using main.py or gui_interface.py for a graphical user interface.
+The code can be run using main.py or gui_interface.py for a graphical user interface. To run the code
+
+```
+python main.py
+```
+
+or to alternatively run the graphical user interface (GUI)
+
+```
+python gui_interface.py
+```
 
 ## Data
 
