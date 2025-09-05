@@ -64,9 +64,9 @@ def parse_args():
                         type=int)
     parser.add_argument('--tolerance', default=1e-2,
                         type=float)
-    parser.add_argument('--figure_path', default='figures_output/',
+    parser.add_argument('--figure_path', default='../output_figures/',
                         type=str)
-    parser.add_argument('--data_path', default='data_output/',
+    parser.add_argument('--data_path', default='../data_output/',
                         type=str)
 
     args = parser.parse_args()

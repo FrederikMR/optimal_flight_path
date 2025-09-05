@@ -29,8 +29,8 @@ from abc import (
     abstractmethod,
     )
 
-from metrics import Metric
-from line_search import Backtracking
+from .metrics import Metric
+from .line_search import Backtracking
 
 #%% GEORCE Estimation of Tack Points and Geodesics
 

@@ -18,8 +18,8 @@ from abc import (
     abstractmethod,
     )
 
-from metrics import ForceFieldMetric
-from geodesics import ForceFieldGeodesic
+from .metrics import ForceFieldMetric
+from .geodesics import ForceFieldGeodesic
 
 #%% Base Earth Class
 

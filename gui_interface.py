@@ -89,8 +89,8 @@ class FlightPathFinder(QWidget):
             "grid_points": 100,
             "max_iter": 1000,
             "tolerance": 1e-2,
-            "data_folder": "jet_stream_data/",
-            "figure_folder": "output_figures/"
+            "data_folder": "../jet_stream_data/",
+            "figure_folder": "../output_figures/"
         }
 
         self.init_ui()
