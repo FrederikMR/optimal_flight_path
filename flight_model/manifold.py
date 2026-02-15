@@ -18,7 +18,7 @@ from abc import (
     abstractmethod,
     )
 
-from .metrics import ForceFieldMetric
+from .metrics import ForceFieldMetric, RiemannianMetric
 from .geodesics import ForceFieldGeodesic
 
 #%% Base Earth Class
@@ -31,11 +31,10 @@ class Earth(ABC):
                  )->Array:
         
         return NotImplemented
-    
 
 #%% WGS84Earth model
 
-class WGS84Earth(Earth):
+class WGS84Earth_Chart(Earth):
     """
     WGS84 Earth ellipsoid model.
     
@@ -61,23 +60,22 @@ class WGS84Earth(Earth):
         else:
             self.half_axes = jnp.array(half_axes) + height
         
-        if force_field is None:
-            self.force_field = lambda t,x: jnp.zeros_like(x, dtype=x.dtype)
-        else:
-            self.force_field = (
-                lambda t,x: force_field(t,
-                                        self.ecef_to_geodetic(self._steo_to_earth(x)))/jnp.max(self.half_axes)
-                )
+        self.force_field = force_field
             
         self.normalized_half_axes = self.half_axes / jnp.max(self.half_axes)
         
         self.flight_speed = flight_speed
-        self.normalized_flight_speed = flight_speed/jnp.max(self.half_axes)
+        self.normalized_flight_speed = flight_speed / jnp.max(self.half_axes)
         
-        self.metric = ForceFieldMetric(self._riemannian_metric, 
-                                       self.force_field,
-                                       speed=self.normalized_flight_speed,
-                                       )
+        if force_field is None:
+            self.metric = RiemannianMetric(self._riemannian_metric, speed=self.normalized_flight_speed)
+        else:
+            self.metric = (
+                ForceFieldMetric(self._riemannian_metric, 
+                                 self.normalized_force_field,
+                                 speed=self.normalized_flight_speed,
+                                 )
+                )
         self.geodesic_solver = ForceFieldGeodesic(metric=self.metric,
                                                   T=grid_points,
                                                   max_iter=max_iter,
@@ -89,6 +87,58 @@ class WGS84Earth(Earth):
     def __str__(self)->str:
         
         return "WGS84 Earth model"
+    
+    def wind_uv_to_normalized_ecef(self, lon_deg, lat_deg, u_kmh, v_kmh):
+        """
+        Convert wind components (u eastward, v northward) in km/h
+        into a normalized ECEF tangent vector (Earth radius = 1).
+        """
+    
+        # Convert to radians
+        lon = jnp.deg2rad(lon_deg)
+        lat = jnp.deg2rad(lat_deg)
+    
+        # Unit tangent vectors on sphere in ECEF coordinates
+        e_east = jnp.array([
+            -jnp.sin(lon),
+             jnp.cos(lon),
+             0.0
+        ])
+    
+        e_north = jnp.array([
+            -jnp.sin(lat) * jnp.cos(lon),
+            -jnp.sin(lat) * jnp.sin(lon),
+             jnp.cos(lat)
+        ])
+    
+        # Build physical wind vector in km/h
+        W_ecef = u_kmh * e_east + v_kmh * e_north
+    
+        # Normalize by Earth radius (km) to match your geometry scaling
+        R = jnp.max(self.half_axes)
+    
+        return W_ecef / R
+    
+    def normalized_force_field(self, t, x_stereo):
+        # Convert stereographic → ECEF
+        x_ecef = self._steo_to_earth(x_stereo)
+    
+        # Convert to geodetic
+        lon_deg, lat_deg = self.ecef_to_geodetic(x_ecef)
+    
+        # Get wind components in km/h
+        u_kmh, v_kmh = self.force_field(t, jnp.array([lon_deg, lat_deg]))
+    
+        # Convert to normalized ECEF tangent vector
+        W_norm_ecef = self.wind_uv_to_normalized_ecef(
+            lon_deg, lat_deg, u_kmh, v_kmh
+        )
+    
+        # Transform ECEF tangent vector → stereographic chart
+        transition = lambda X: self._normalized_earth_to_steo(X)
+        J = jacfwd(transition)(x_ecef / jnp.max(self.half_axes))
+    
+        return J @ W_norm_ecef
     
     def earth_to_map(self,
                      x:Array,
@@ -154,6 +204,17 @@ class WGS84Earth(Earth):
         
         return jnp.stack((x,y))
     
+    def _normalized_earth_to_steo(self,
+                                  x:Array,
+                                  )->Array:
+        
+        X,Y,Z = x/self.normalized_half_axes
+        
+        x = X/(1.-Z)
+        y = Y/(1.-Z)
+        
+        return jnp.stack((x,y))
+    
     def _riemannian_metric(self,
                            z:Array,
                            )->Array:
@@ -172,6 +233,34 @@ class WGS84Earth(Earth):
         # Custom ellipsoid parameters (in meters)
         a = self.half_axes[0]  # semi-major axis
         b = self.half_axes[1]  # semi-minor axis
+    
+        # Eccentricity squared
+        e2 = 1 - (b**2 / a**2)
+    
+        # Convert latitude and longitude to radians
+        lat = jnp.deg2rad(lat_deg)
+        lon = jnp.deg2rad(lon_deg)
+    
+        # Radius of curvature in the prime vertical
+        N = a / jnp.sqrt(1 - e2 * jnp.sin(lat)**2)
+    
+        # Compute ECEF coordinates
+        x = (N + h) * jnp.cos(lat) * jnp.cos(lon)
+        y = (N + h) * jnp.cos(lat) * jnp.sin(lon)
+        z = (N * (1 - e2) + h) * jnp.sin(lat)
+    
+        return jnp.stack((x, y, z))
+    
+    def geodetic_to_normalized_ecef(self,
+                                    x:Array,
+                                    h: float = 0.0,
+                                    )->Array:
+        
+        lon_deg, lat_deg = x
+        
+        # Custom ellipsoid parameters (in meters)
+        a = self.normalized_half_axes[0]  # semi-major axis
+        b = self.normalized_half_axes[1]  # semi-minor axis
     
         # Eccentricity squared
         e2 = 1 - (b**2 / a**2)
@@ -228,6 +317,44 @@ class WGS84Earth(Earth):
     
         return jnp.stack((lon_deg, lat_deg)) #h
     
+    def normalized_ecef_to_geodetic(self, 
+                                    x:Array,
+                                    )->Array:
+        
+        x,y,z = x
+        
+        # Custom ellipsoid parameters
+        a = self.normalized_half_axes[0]   # semi-major axis in meters
+        b = self.normalized_half_axes[1]   # semi-minor axis in meters
+        e2 = 1 - (b**2 / a**2)  # eccentricity squared
+        ep2 = (a**2 - b**2) / b**2  # second eccentricity squared
+    
+        # Longitude
+        lon = jnp.arctan2(y, x)
+    
+        # Compute preliminary values
+        p = jnp.sqrt(x**2 + y**2)
+        theta = jnp.arctan2(z * a, p * b)
+    
+        # Latitude (Bowring's formula)
+        sin_theta = jnp.sin(theta)
+        cos_theta = jnp.cos(theta)
+    
+        lat = jnp.arctan2(z + ep2 * b * sin_theta**3,
+                         p - e2 * a * cos_theta**3)
+    
+        # Radius of curvature in the prime vertical
+        #N = a / jnp.sqrt(1 - e2 * jnp.sin(lat)**2)
+    
+        # Altitude above ellipsoid
+        #h = p / jnp.cos(lat) - N
+    
+        # Convert radians to degrees
+        lat_deg = jnp.rad2deg(lat)
+        lon_deg = jnp.rad2deg(lon)
+    
+        return jnp.stack((lon_deg, lat_deg)) #h
+    
     def geodesic(self,
                  z1:Array, #Points in (longitude, lattitude)
                  z2:Array, #Points in (longitude, lattitude)
@@ -235,6 +362,9 @@ class WGS84Earth(Earth):
         
         x1 = self.geodetic_to_ecef(z1)
         x2 = self.geodetic_to_ecef(z2)
+        
+        #z1 = self.ecef_to_geodetic(x1)
+        #z2 = self.ecef_to_geodetic(x2)
         
         z1 = self._earth_to_steo(x1)
         z2 = self._earth_to_steo(x2)
@@ -247,4 +377,19 @@ class WGS84Earth(Earth):
         zcurve = vmap(self.ecef_to_geodetic)(xcurve)
         
         return travel_time, zcurve
+    
+    def travel_time(self,
+                    curve:Array,
+                    )->float:
+        
+        xcurve = vmap(self.geodetic_to_ecef)(curve)
+        zcurve = vmap(self._earth_to_steo)(xcurve)
+        
+        geodesic_solver = ForceFieldGeodesic(metric=self.metric,
+                                                  )
+        geodesic_solver.z0 = zcurve[0]
+        geodesic_solver.t0 = 0.0        
+        travel_time = geodesic_solver.update_ts(zcurve[1:-1], zcurve[1:]-zcurve[:-1])[-1]
+
+        return travel_time
     

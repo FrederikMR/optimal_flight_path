@@ -16,9 +16,13 @@ from numpy.typing import ArrayLike
 
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
+from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
+from matplotlib.patheffects import withStroke
+
+from typing import Dict
 
 #%% Helper function
 
@@ -196,6 +200,85 @@ def plot_3d_earth(start_coordinate: ArrayLike,
     fig.savefig(save_path, format='png', pad_inches=0.1, bbox_inches='tight')
 
     plt.close()
+    
+#%% Plot earth
+
+import matplotlib.patheffects as path_effects
+
+def plot_3d_earth_multi_paths(start_coordinate: np.ndarray,
+                              end_coordinate: np.ndarray,
+                              flight_paths: list,
+                              globe_scale: float = 0.5,
+                              path_colors: list = None,
+                              path_width: float = 2.0,
+                              marker_size: int = 20,
+                              figure_path: str = '',
+                              start_city: str = '',
+                              end_city: str = '',
+                              city_label_size: int = 10) -> None:
+    """
+    Plot a 3D globe with multiple flight paths between the same start and end points.
+    
+    City labels now have a white halo and are offset so they don't overlap the markers.
+    """
+    import numpy as np
+    from mpl_toolkits.basemap import Basemap
+    import matplotlib.pyplot as plt
+
+    # Compute globe center from midpoint of start and end
+    vec_start = geodetic_to_unit_vector(*start_coordinate)
+    vec_end = geodetic_to_unit_vector(*end_coordinate)
+    vec_mid = (vec_start + vec_end) / 2
+    vec_mid /= np.linalg.norm(vec_mid)
+    lon_0, lat_0 = unit_vector_to_geodetic(vec_mid)
+
+    fig = plt.figure(figsize=(8, 8))
+    m = Basemap(projection='ortho',
+                resolution='l',
+                lat_0=lat_0,
+                lon_0=lon_0)
+
+    # Default colors if not provided
+    if path_colors is None:
+        path_colors = plt.cm.tab10.colors
+
+    # Draw the flight paths
+    for i, path in enumerate(flight_paths):
+        color = path_colors[i % len(path_colors)]
+        xfp, yfp = m(path[:, 0], path[:, 1])
+        m.plot(xfp, yfp, color=color, linewidth=path_width)
+
+    # Draw start and end points in black
+    xp, yp = m(start_coordinate[0], start_coordinate[1])
+    xc, yc = m(end_coordinate[0], end_coordinate[1])
+    m.scatter(xp, yp, marker='o', color='black', s=marker_size, zorder=5)
+    m.scatter(xc, yc, marker='o', color='black', s=marker_size, zorder=5)
+
+    # Path effects for text halo
+    halo = [path_effects.withStroke(linewidth=3, foreground='white')]
+
+    # Offset labels in points so they don't overlap the markers
+    text_offset = (5, 5)  # x, y in points
+
+    if start_city:
+        plt.annotate(start_city, xy=(xp, yp), xytext=text_offset, textcoords='offset points',
+                     color='black', fontsize=city_label_size, fontweight='bold',
+                     path_effects=halo, zorder=6)
+    if end_city:
+        plt.annotate(end_city, xy=(xc, yc), xytext=text_offset, textcoords='offset points',
+                     color='black', fontsize=city_label_size, fontweight='bold',
+                     path_effects=halo, zorder=6)
+
+    # Background
+    m.bluemarble(scale=globe_scale)
+
+    fig.tight_layout()
+    save_path = f'{figure_path}earth_3d_multi_paths.pdf'
+    fig.savefig(save_path, format='pdf', pad_inches=0.1, bbox_inches='tight')
+    plt.close()
+
+
+
 
     
 #%% Plot jet streams
@@ -276,3 +359,148 @@ def plot_jet_streams(lons:ArrayLike,
     fig.savefig(save_path, format='png', pad_inches=0.1, bbox_inches='tight')
     
     plt.close()
+    
+#%%
+
+def plot_jet_streams_comparison(lons,
+                                lats,
+                                u,
+                                v,
+                                speed,
+                                flight_paths: dict,
+                                start_end_labels: dict = None,  # e.g., {"start": "NYC", "end": "CPH"}
+                                arrow_step=20,
+                                title="Interpolated Jet Stream (250 hPa)",
+                                figure_path: str = ''):
+
+    # Ensure increasing latitude
+    if lats[0] > lats[-1]:
+        lats, u, v, speed = lats[::-1], u[::-1], v[::-1], speed[::-1]
+
+    # --- determine region exactly from force field ---
+    lon_min, lon_max = np.min(lons), np.max(lons)
+    lat_min, lat_max = np.min(lats), np.max(lats)
+    region_extent = [lon_min, lon_max, lat_min, lat_max]
+
+    # Convert to numpy arrays
+    lon_s = np.array(lons)
+    lat_s = np.array(lats)
+    u_s = np.array(u)
+    v_s = np.array(v)
+    speed_s = np.array(speed)
+
+    lon_grid, lat_grid = np.meshgrid(lon_s, lat_s)
+
+    # --- plotting ---
+    fig, ax = plt.subplots(figsize=(12, 6), subplot_kw={'projection': ccrs.PlateCarree()})
+    ax.set_facecolor('white')
+    fig.patch.set_facecolor('white')
+
+    # Base map
+    ax.coastlines()
+    ax.add_feature(cfeature.BORDERS, linestyle=':')
+    ax.set_extent(region_extent, crs=ccrs.PlateCarree())
+    
+    # Plot contours
+    cs = ax.contourf(lon_grid, lat_grid, speed_s, 60, cmap='coolwarm', transform=ccrs.PlateCarree())
+
+    # Wind arrows
+    # Normalize vectors to unit length
+    norm = np.sqrt(u_s**2 + v_s**2)
+    u_unit = u_s / (norm + 1e-6)
+    v_unit = v_s / (norm + 1e-6)
+    
+    # Set desired arrow line length
+    arrow_length = 0.02  # adjust this to make shafts shorter/longer
+    
+    ax.quiver(
+        lon_grid[::arrow_step, ::arrow_step],
+        lat_grid[::arrow_step, ::arrow_step],
+        u_unit[::arrow_step, ::arrow_step] * arrow_length,
+        v_unit[::arrow_step, ::arrow_step] * arrow_length,
+        transform=ccrs.PlateCarree(),
+        scale=1,         # keep scale=1 so length is controlled by arrow_length
+        width=0.002,
+        headlength=4,
+        color='gray',
+        alpha=0.7
+    )
+
+
+    # Flight paths
+    colors = plt.cm.tab10.colors
+    for i, (name, (travel_time, path)) in enumerate(flight_paths.items()):
+        color = colors[i % len(colors)]
+
+        # Convert travel time to h m
+        hours = int(travel_time)
+        minutes = int(round((travel_time - hours) * 60))
+        legend_label = f"{name} ({hours}h {minutes}m)"
+
+        # Smoothed line with label for legend
+        ax.plot(path[:, 0], path[:, 1], linestyle='-', linewidth=2, color=color,
+                transform=ccrs.PlateCarree(), label=legend_label)
+
+        # --- start/end black dots ---
+        ax.scatter(path[0, 0], path[0, 1], color='black', s=40, zorder=5, transform=ccrs.PlateCarree())
+        ax.scatter(path[-1, 0], path[-1, 1], color='black', s=40, zorder=5, transform=ccrs.PlateCarree())
+
+        # --- city labels with halo for better visibility ---
+        offset_lon = 5.0  # push further out
+        offset_lat = 5.0
+        fontsize_city = 12
+        halo_effect = [withStroke(linewidth=3, foreground='white')]
+        
+        if i == len(flight_paths.items())-1:
+            if start_end_labels is not None:
+                # Start point
+                start_offset = offset_lon if path[0, 0] < (lon_min + lon_max)/2 else -offset_lon
+                ax.text(path[0, 0] + start_offset, path[0, 1] + offset_lat,
+                        start_end_labels.get("start", "Start"),
+                        fontsize=fontsize_city, fontweight='bold', color='black', zorder=6,
+                        transform=ccrs.PlateCarree(), va='center', path_effects=halo_effect)
+    
+                # End point
+                end_offset = offset_lon if path[-1, 0] < (lon_min + lon_max)/2 else -offset_lon
+                ax.text(path[-1, 0] + end_offset, path[-1, 1] + offset_lat,
+                        start_end_labels.get("end", "End"),
+                        fontsize=fontsize_city, fontweight='bold', color='black', zorder=6,
+                        transform=ccrs.PlateCarree(), va='center', path_effects=halo_effect)
+
+        # --- midpoint arrow showing direction ---
+        mid_idx = len(path) // 2
+        mid_point = path[mid_idx]
+        if mid_idx > 0:
+            dx = path[mid_idx + 1, 0] - path[mid_idx - 1, 0]
+            dy = path[mid_idx + 1, 1] - path[mid_idx - 1, 1]
+        else:
+            dx = path[1, 0] - path[0, 0]
+            dy = path[1, 1] - path[0, 1]
+
+        ax.arrow(mid_point[0], mid_point[1], dx*0.05, dy*0.05,
+                 head_width=2.0, head_length=1.5, fc="black", ec="black",
+                 transform=ccrs.PlateCarree(), zorder=5)
+
+    # --- legend (colors match curves automatically) ---
+    ax.legend(loc='upper right', fontsize=14)
+
+    plt.title(title, fontsize=14)
+    
+    # Plot contours
+    # Shrink the main axes to leave space at the bottom
+    pos = ax.get_position()  # Bbox(x0, y0, x1, y1)
+    ax.set_position([pos.x0, pos.y0 + 0.05, pos.width, pos.height - 0.05])  # shrink height by 5% at bottom
+    
+    # Add full-width colorbar in the reserved bottom space
+    cbar_ax = fig.add_axes([0.05, -0.02, 0.90, 0.03])  # left, bottom, width, height
+    cbar = fig.colorbar(cs, cax=cbar_ax, orientation='horizontal', label='Wind Speed (km/h)')
+    cbar.ax.tick_params(labelsize=14)                # Set font size of the tick labels
+    
+    fig.tight_layout()
+
+    # Save figure
+    save_path = f'{figure_path}earth_region_chart.pdf'
+    fig.savefig(save_path, format='pdf', pad_inches=0.1, bbox_inches='tight', facecolor='white')
+    plt.close()
+
+

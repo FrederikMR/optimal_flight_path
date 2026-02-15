@@ -81,7 +81,7 @@ class ForceFieldMetric(Metric):
         gv = (1.0+jnp.dot(b, v)/inner)*(a-jnp.einsum('i,j->ij', l, l))\
             +jnp.einsum('i,j->ij', b+l, b+l)
         
-        return 0.5*gv
+        return gv
     
     def metric(self,
                t:Array,
@@ -102,3 +102,46 @@ class ForceFieldMetric(Metric):
         term2 = jnp.dot(b, v)
         
         return jnp.sqrt(term1)+term2
+    
+class RiemannianMetric(Metric):
+    def __init__(self,
+                 riemannian_metric:Callable[[Array], Array],
+                 speed:float=.25,
+                 )->None:
+        
+        self.riemannian_metric = riemannian_metric
+        self.speed = speed
+        
+        return
+    
+    def __str__(self,)->str:
+        
+        return "Time-dependent Finsler metric for the earth with a force field"
+    
+    def fundamental_tensor(self,
+                           t:Array,
+                           z:Array,
+                           v:Array,
+                           )->Array:
+        
+        g = self.riemannian_metric(z)
+        
+        lam = 1./((self.speed**2))
+
+        return g*lam
+    
+    def metric(self,
+               t:Array,
+               z:Array,
+               v:Array,
+               )->Array:
+        
+        g = self.riemannian_metric(z)
+        
+        lam = 1./((self.speed**2))
+        
+        a = g*lam
+        
+        term1 = jnp.einsum('ij,i,j->', a, v, v)
+        
+        return jnp.sqrt(term1)

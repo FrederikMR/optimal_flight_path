@@ -46,13 +46,13 @@ def decimal_to_dms(lat, lon):
         seconds = round((minutes_float - minutes) * 60)
         
         if is_lat:
-            hemisphere = 'N' if deg >= 0 else 'S'
-        else:
             hemisphere = 'E' if deg >= 0 else 'W'
+        else:
+            hemisphere = 'N' if deg >= 0 else 'S'
 
         return f"{degrees}°{minutes}′{seconds}″{hemisphere}"
 
-    return to_dms(lat, is_lat=True) + " " + to_dms(lon, is_lat=False)
+    return to_dms(lon, is_lat=False) + " " + to_dms(lat, is_lat=True)
 
 
 def dms_to_decimal(dms_str):
@@ -432,7 +432,11 @@ class FlightPathFinder(QWidget):
         
         # Compute indices for exactly num_waypoints points, spaced across the full path
         path_len = flight_path.shape[0]
-        indices = jnp.linspace(0, path_len - 1, num=num_waypoints, dtype=int)
+        start_index = num_waypoints
+        end_index = path_len - num_waypoints  # Keep it within the bounds
+        
+        # Generate indices based on the new start and end points
+        indices = jnp.linspace(start_index, end_index, num=num_waypoints, dtype=int)
         
         waypoints = flight_path[indices]
 
