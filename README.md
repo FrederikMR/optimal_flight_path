@@ -1,6 +1,7 @@
 # Optimal Flight Path under Jet Streams ✈️
 
 <img width="569" height="292" alt="earth_chart" src="https://github.com/user-attachments/assets/d55e1770-7c54-4673-8436-811c2927b37c" />
+[earth_chart.pdf](https://github.com/user-attachments/files/26161802/earth_chart.pdf)
 
 
 
