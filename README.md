@@ -34,7 +34,7 @@ python gui_interface.py
 By calling
 
 ```
-python main.py
+python main_mean.py
 ```
 
 It is possible compute the mean under a time-dependent Finsler metric correspondng to the closest point to a number of airports.
