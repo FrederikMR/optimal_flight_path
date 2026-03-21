@@ -29,6 +29,14 @@ or to alternatively run the graphical user interface (GUI)
 python gui_interface.py
 ```
 
+By calling
+
+```
+python main.py
+```
+
+It is possible compute the mean under a time-dependent Finsler metric correspondng to the closest point to a number of airports.
+
 ## Data
 
 The code automatically downloads the jet stream data using The Climate Data Store (CDS) Application Program Interface (API). We refer to CDS for license, details and how to setup up the API.
@@ -39,6 +47,7 @@ The following shows the structure of the code.
 
     .
     ├── main.py                                     # Computes the time-minimizing curve given initial parameters between two points on earth for a static jet stream.
+    ├── main_mean.py                                # Computes the closest place to a given number of airport (either as a start or end point)
     ├── gui_interface.py                            # A graphical user interface for computing time-minizming curves between two points.
     ├── flight_model/manifold.py                    # Contains the WGS48 Earth Model
     ├── flight_model/conversion.py                  # Conversion from coordinates to floates
