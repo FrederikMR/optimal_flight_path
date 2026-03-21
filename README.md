@@ -1,8 +1,9 @@
 # Optimal Flight Path under Jet Streams ✈️
 
 <img width="569" height="292" alt="earth_chart" src="https://github.com/user-attachments/assets/d55e1770-7c54-4673-8436-811c2927b37c" />
-[earth_chart.pdf](https://github.com/user-attachments/files/26161802/earth_chart.pdf)
-![Earth Chart](assets/earth_chart.png)
+
+<img width="792" height="478" alt="earth_chart" src="https://github.com/user-attachments/assets/8ef7c252-3601-4a3a-a76c-1e7bbd22cb69" />
+
 
 
 This repository is a "just for fun"-project that aims to compute the time-minimizing flight paths given jet streams.
