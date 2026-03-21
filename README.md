@@ -39,7 +39,11 @@ It is possible compute the mean under a time-dependent Finsler metric correspond
 
 ## Data
 
-The code automatically downloads the jet stream data using The Climate Data Store (CDS) Application Program Interface (API). We refer to CDS for license, details and how to setup up the API.
+The code automatically downloads the jet stream data using The Climate Data Store (CDS) Application Program Interface (API). We refer to CDS for license, details and how to setup up the API. The jet stream displayed in the figure above is from the CDS, and any use should be properply cited.
+
+```
+Hersbach, H., Bell, B., Berrisford, P., Hirahara, S., Horányi, A., Muñoz-Sabater, J., Nicolas, J., Peubey, C., Radu, R., Schepers, D., Simmons, A., Soci, C., & Dee, D. (2020). ERA5 monthly averaged data on pressure levels from 1979 to present. Copernicus Climate Change Service (C3S) Climate Data Store (CDS). https://doi.org/10.24381/cds.adbb2d47
+```
 
 ## Code Structure
 
