@@ -64,31 +64,31 @@ from flight_model.region_penalizer import (
 def parse_args():
     parser = argparse.ArgumentParser()
     # File-paths
-    parser.add_argument('--start_coordinate', default="JFK", #JFK
+    parser.add_argument('--start_coordinate', default="KMIA", #JFK
                         type=str)
-    parser.add_argument('--end_coordinate', default="CPH", #CPH
+    parser.add_argument('--end_coordinate', default="LFPG", #CPH
                         type=str)
-    parser.add_argument('--start_city', default="New York",
+    parser.add_argument('--start_city', default="Miami",
                         type=str)
-    parser.add_argument('--end_city', default="Copenhagen",
+    parser.add_argument('--end_city', default="Paris",
                         type=str)
-    parser.add_argument('--restricted_countries', default=["United Kingdom"], #United Kingdom
+    parser.add_argument('--restricted_countries', default=[], #United Kingdom
                         type=list)
     parser.add_argument('--height', default=11.0,
                         type=float)
     parser.add_argument('--flight_speed', default=800., #900 km/h
                         type=float)
-    parser.add_argument('--start_time', default='12:00',
+    parser.add_argument('--start_time', default='17:00',
                         type=str)
     parser.add_argument('--time_step', default=1.0,
                         type=float)
     parser.add_argument('--end_time', default=24.0,
                         type=str)
-    parser.add_argument('--day', default='28',
+    parser.add_argument('--day', default='01',
                         type=str)
-    parser.add_argument('--month', default='08',
+    parser.add_argument('--month', default='02',
                         type=str)
-    parser.add_argument('--year', default='2025',
+    parser.add_argument('--year', default='2026',
                         type=str)
     parser.add_argument('--pressure_level', default='250',
                         type=str)
@@ -298,8 +298,8 @@ def run_static_jet_stream(args, penalizer, full_coords):
                      )
     
     plot_jet_streams_region(lon_fine, lat_fine, u_fine, v_fine, speed_fine, 
-                     flight_paths = {f'{args.end_city} - {args.start_city}': [travel_time_reverse[-1], flight_path_reverse, "green"],
-                                     f'{args.start_city} - {args.end_city}': [travel_time[-1], flight_path, "red"],
+                     flight_paths = {f'{args.end_city}-{args.start_city}': [travel_time_reverse[-1], flight_path_reverse, "purple"],
+                                     f'{args.start_city}-{args.end_city}': [travel_time[-1], flight_path, "red"],
                                      },
                      start_end_labels = {'start': args.start_city,
                                          'end': args.end_city,
@@ -310,7 +310,7 @@ def run_static_jet_stream(args, penalizer, full_coords):
                      )
     
     plot_3d_earth_paths(start_coordinate, end_coordinate, [flight_path_reverse, flight_path],
-                        colors=["green","red"],
+                        colors=["purple","red"],
                         start_city=args.start_city, end_city=args.end_city,
                         figure_path=f'{figure_path}reverse_path',
                         )
@@ -321,8 +321,8 @@ def run_static_jet_stream(args, penalizer, full_coords):
 
 def run_time_dependent_jet_stream(args, penalizer, full_coords):
     
-    figure_path = ''.join((args.figure_path, 'time_dependent_jet_stream/'))
-    data_path = ''.join((args.data_path, 'time_dependent_jet_stream/'))
+    figure_path = ''.join((args.figure_path, 'evaluate/time_dependent_jet_stream/'))
+    data_path = ''.join((args.data_path, 'evaluate/time_dependent_jet_stream/'))
     
     if not os.path.exists(figure_path):
         os.makedirs(figure_path)
@@ -455,21 +455,21 @@ def run_time_dependent_jet_stream(args, penalizer, full_coords):
                      title="Optimal Flight Path (250 hPa)"
                      )
     
-    plot_jet_streams_full(lon_fine, lat_fine, u_fine[0], v_fine[0], speed_fine[0], 
-                          flight_paths = {'With Jet Stream': [travel_time[-1], flight_path, "red"],
-                                         'No Jet Stream': [travel_time_no_js[-1], flight_path_no_js, "orange"],
-                                         'Straight line': [travel_time_euclidean[-1], flight_path_euclidean, "green"]},
-                          start_end_labels = {'start': args.start_city,
-                                              'end': args.end_city,
-                                              },
-                          full_coords=None,
-                          figure_path=figure_path,
-                          title="Optimal Flight Path (250 hPa)"
-                          )
+    plot_jet_streams_region(lon_fine, lat_fine, u_fine[0], v_fine[0], speed_fine[0], 
+                     flight_paths = {'Finslerian': [travel_time[-1], flight_path, "red"],
+                                    'Riemannian': [travel_time_no_js[-1], flight_path_no_js, "orange"],
+                                    'Straight line': [travel_time_euclidean[-1], flight_path_euclidean, "green"]},
+                     start_end_labels = {'start': args.start_city,
+                                         'end': args.end_city,
+                                         },
+                     full_coords=None,
+                     figure_path=figure_path,
+                     title="Optimal Flight Path (250 hPa)"
+                     )
     
     plot_jet_streams_full(lon_fine, lat_fine, u_fine[0], v_fine[0], speed_fine[0], 
                      flight_paths = {'Finslerian': [travel_time[-1], flight_path, "red"],
-                                    'Region avoidance': [travel_region_time[-1], flight_region_path, "green"],
+                                    'Region avoidance': [travel_region_time[-1], flight_region_path, "orange"],
                                     },
                      start_end_labels = {'start': args.start_city,
                                          'end': args.end_city,
@@ -492,8 +492,8 @@ def run_time_dependent_jet_stream(args, penalizer, full_coords):
                      )
     
     plot_jet_streams_region(lon_fine, lat_fine, u_fine[0], v_fine[0], speed_fine[0], 
-                     flight_paths = {f'{args.end_city} - {args.start_city}': [travel_time_reverse[-1], flight_path_reverse, "green"],
-                                     f'{args.start_city} - {args.end_city}': [travel_time[-1], flight_path, "red"],
+                     flight_paths = {f'{args.end_city}-{args.start_city}': [travel_time_reverse[-1], flight_path_reverse, "purple"],
+                                     f'{args.start_city}-{args.end_city}': [travel_time[-1], flight_path, "red"],
                                      },
                      start_end_labels = {'start': args.start_city,
                                          'end': args.end_city,
@@ -504,15 +504,12 @@ def run_time_dependent_jet_stream(args, penalizer, full_coords):
                      )
     
     plot_3d_earth_paths(start_coordinate, end_coordinate, [flight_path_reverse, flight_path],
-                        colors=["green","red"],
+                        colors=["purple","red"],
                         start_city=args.start_city, end_city=args.end_city,
                         figure_path=f'{figure_path}reverse_path',
                         )
     
-    plot_time_paths_region(lon_fine, lat_fine, 
-                           interpolation_u,
-                           interpolation_v,
-                           interpolation_speed,
+    plot_time_paths_region(lon_fine, lat_fine, u_fine[0], v_fine[0], speed_fine[0], 
                      flight_paths = {'curve1': ["Time-dependent Finslerian", travel_time[int(len(travel_time)*0.25)], 
                                                     flight_path[:int(len(travel_time)*0.25)], "red"],
                                      'curve2': ["Time-dependent Finslerian", travel_time[int(len(travel_time)*0.50)], 
@@ -645,7 +642,7 @@ if __name__ == "__main__":
     
     converter = CoordinateConverter()
 
-    airports = airportsdata.load("IATA")
+    airports = airportsdata.load("ICAO")
     
     try:
         start_airport = airports[args.start_coordinate]
