@@ -2,6 +2,8 @@
 
 <img width="569" height="292" alt="earth_chart" src="https://github.com/user-attachments/assets/d55e1770-7c54-4673-8436-811c2927b37c" />
 
+
+
 This repository is a "just for fun"-project that aims to compute the time-minimizing flight paths given jet streams.
 
 Computing the time-minimizing curve between two points on a sphere corresponds to finding the geodesics on a sphere, which have a well-known closed-form expression. However, if a flight is moving under the influence of a jet stream, simply computing geodesics under a Riemannian metric will not the time-minimizing flight path. This repository computes the time minimizing flight path between two points given a jet stream by computing geodesics under a time-dependent Finsler metric. We consider the Riemannian background metric induced by the WGS48 Earth Model corresponding to an ellipsoid, and a time-dependent force field acting on the earth model corresponding to the jet stream. Under certain regularity this can be seen as a time-dependent Finsler metric following the work of [1].
