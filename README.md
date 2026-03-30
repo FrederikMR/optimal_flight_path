@@ -67,7 +67,8 @@ The following shows the structure of the code.
 
 In the current version the optimal flight path can be found without a jet stream or with a static jet stream. Future work can include:
 * Constructing a model that estimates the time evolution of the jet stream. This can be added directly to the code as is.
-* Incorporating constraints into the model, e.g., places where it is not allowed to fly
+* Incorporating constraints into the model, e.g., places where it is not allowed to fly [ADDED]
+* Model the optimal height as well as the optimal flight path.
 
 ## Disclaimer
 
